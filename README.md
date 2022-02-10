@@ -1,11 +1,11 @@
 
-### PROJET 6 OPENCLASSROOMS PIIQUANTE ###
+# PROJET 6 OPENCLASSROOMS PIIQUANTE #
 
 
-## Ce projet est basé sur la création du backend pour un site de critiques de sauces piquantes.
+# Ce projet est basé sur la création du backend pour un site de critiques de sauces piquantes.
 Utilisation de NodeJS, express et divers packages npm.
 
-## Installation ##
+# Installation #
 
 Voici les dépendances que vous devez installer :
 - NodeJS 12.14 ou 14.0.
@@ -23,20 +23,20 @@ Dans le front-end effectuer les opérations suivante:
  `run npm install` et `run npm install --save-dev run-script-os`.
 
 
-## Usage ##
+# Usage #
 
 Ajouter un dossier "images" dans le backend
 
 Modifiez le dossier `.template.env` en `.env` et complétez avec les identifiants.
 
-# Démarrer le serveur sur le dossier backend #
+## Démarrer le serveur sur le dossier backend ##
 
 `cd backend` 
 
 `nodemon server`
 
 
-# Démarrer le frontend: #
+## Démarrer le frontend: ##
 
 
 `cd frontend`

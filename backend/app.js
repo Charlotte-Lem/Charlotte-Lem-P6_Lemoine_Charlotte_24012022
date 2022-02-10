@@ -7,8 +7,8 @@ const mongoSanitize = require('express-mongo-sanitize');
 //plugin pour l'upload des images
 const path = require('path');
 
-//module qui stocke les données de session sur le client dans un cookie
-// const cookieSession = require('cookie-session');
+//package express rate limit pour limiter les demandes répétées aux API
+const rateLimit = require('express-rate-limit');
 
 //importation des differentes routes : route de connection à la BDD de mongoDB route sauce et route user
 const mongoose = require('./db/db');
@@ -36,6 +36,16 @@ app.use((req, res, next) => {
   next();
 });
 
+//configuration de express rate limit
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Limite a 100 les requetes de chaque IP pendant 15 minutes
+  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+});
+
+// Apply the rate limiting middleware to all requests
+app.use(limiter);
 
 //renvoie le corp de la requetes en format json
 app.use(express.json());
