@@ -16,21 +16,14 @@ passwordSchema
   .digits() // Doit avoir au moins 1 chiffres
   .has()
   .not()
-  .spaces() // Ne doit pas avoir d'espaces
-
-  .is()
-  .not()
-  .oneOf(['Passw0rd', 'Password123']); // Mettre ces valeurs sur liste noire
+  .spaces(); // Ne doit pas avoir d'espaces
 
 module.exports = (req, res, next) => {
   if (passwordSchema.validate(req.body.password)) {
     next();
   } else {
     return res.status(401).json({
-      message: `Votre mot de passe n'est pas assez sécurisé: ${passwordSchema.validate(
-        'req.body.password',
-        { list: true }
-      )}`,
+      message: `Votre mot de passe n'est pas assez sécurisé: 8 caractères min, 20 max, 1 maj, 1 min, 1 chiffre minimum et pas d'espace svp. `,
     });
   }
 };

@@ -1,3 +1,4 @@
+const jwt = require('jsonwebtoken');
 const Sauce = require('../models/Sauce');
 
 //on inclut le module FyleSystem qui permet de travailler avec les fichiers
@@ -6,14 +7,10 @@ const fs = require('fs');
 //création d'une sauce
 exports.createSauce = (req, res, next) => {
   const sauceObject = JSON.parse(req.body.sauce);
+
   delete sauceObject._id;
   const sauce = new Sauce({
-    userId: sauceObject.userId,
-    name: sauceObject.name,
-    manufacturer: sauceObject.manufacturer,
-    description: sauceObject.description,
-    mainPepper: sauceObject.mainPepper,
-    heat: sauceObject.heat,
+    ...sauceObject,
     imageUrl: `${req.protocol}://${req.get('host')}/images/${
       req.file.filename
     }`,
@@ -22,21 +19,13 @@ exports.createSauce = (req, res, next) => {
     usersLiked: [],
     usersDisliked: [],
   });
-
+  console.log(req.body.sauce);
+  // Sauvegarde de la sauce dans la base de données
   sauce
     .save()
-    .then(() => {
-      res.status(201).json({
-        message: 'Sauce saved successfully!',
-      });
-    })
-    .catch((error) => {
-      res.status(400).json({
-        error: error,
-      });
-    });
+    .then(() => res.status(201).json({ message: 'Sauce enregistrée !' }))
+    .catch((error) => res.status(400).json({ error }));
 };
-
 //trouver une sauce par son id
 exports.getOneSauce = (req, res, next) => {
   Sauce.findOne({
@@ -62,24 +51,47 @@ exports.modifySauce = (req, res, next) => {
         }`,
       }
     : { ...req.body };
-  Sauce.updateOne(
-    { _id: req.params.id },
-    { ...sauceObject, _id: req.params.id }
-  )
-    .then(() => res.status(200).json({ message: 'Objet modifié !' }))
-    .catch((error) => res.status(400).json({ error }));
+  Sauce.findOne({ _id: req.params.id }).then((sauce) => {
+    if (req.file == null) {
+      Sauce.updateOne(
+        { _id: req.params.id },
+        { ...sauceObject, _id: req.params.id }
+      )
+        .then(() => res.status(200).json({ message: 'Sauce modifiée !' }))
+        .catch((error) => res.status(400).json({ error }));
+    } else {
+      const filename = sauce.imageUrl.split('/images/')[1];
+      fs.unlink(`images/${filename}`, () => {
+        Sauce.updateOne(
+          { _id: req.params.id },
+          { ...sauceObject, _id: req.params.id }
+        )
+          .then(() => res.status(200).json({ message: 'Sauce modifiée !' }))
+          .catch((error) => res.status(400).json({ error }));
+      });
+    }
+  });
 };
 
 //Suppression d'une sauce
 exports.deleteSauce = (req, res, next) => {
+  const token = req.headers.authorization.split(' ')[1];
+  const decodedToken = jwt.verify(token, 'RANDOM_TOKEN_SECRET');
+  const userId = decodedToken.userId;
   Sauce.findOne({ _id: req.params.id })
     .then((sauce) => {
-      const filename = sauce.imageUrl.split('/images/')[1];
-      fs.unlink(`images/${filename}`, () => {
-        Sauce.deleteOne({ _id: req.params.id })
-          .then(() => res.status(200).json({ message: 'Objet supprimé !' }))
-          .catch((error) => res.status(400).json({ error }));
-      });
+      //si userId est le meme que celui qui a créé la sauce
+      if (sauce.userId === userId) {
+        const filename = sauce.imageUrl.split('/images/')[1];
+        fs.unlink(`images/${filename}`, () => {
+          Sauce.deleteOne({ _id: req.params.id })
+            .then(() => res.status(200).json({ message: 'Sauce supprimé !' }))
+            .catch((error) => res.status(400).json({ error }));
+        });
+      } else {
+        //si userId different
+        res.status(403).json({ message: 'Requête non autorisée !' });
+      }
     })
     .catch((error) => res.status(500).json({ error }));
 };
@@ -101,11 +113,6 @@ exports.getAllSauces = (req, res, next) => {
 // Likes dislikes d'une sauce
 //////////////////////////////////////////////
 
-// l'id du user doit être enregistré dans tableau usersLiked usersDisliked
-// like ou dislikes unique du user
-// mise a jour du nombre total de like et dislike a chaque notation
-//////////////////////////////////////////////
-/////////////////////////////////////////////
 exports.likeSauce = (req, res, next) => {
   const userId = req.body.userId;
   const like = req.body.like;

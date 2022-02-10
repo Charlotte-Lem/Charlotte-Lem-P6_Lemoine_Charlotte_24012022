@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 
+// plugin mongooose pour garantir l'unicité de l'adresse
 const uniqueValidator = require('mongoose-unique-validator');
 
 const userSchema = mongoose.Schema({
